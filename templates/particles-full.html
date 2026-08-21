@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tsParticles 三效果完整模板</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; overflow-x: hidden; }
+
+  .section { min-height: 100vh; position: relative; overflow: hidden; }
+  /* ⚠️ 容器必须显式撑满 */
+  #tsBg, #tsMouse, #tsText { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+  .section .content {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100vh; text-align: center; padding: 2rem; pointer-events: none;
+  }
+  .section h2 { font-size: 2rem; margin-bottom: 0.5rem; text-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+  .section p  { font-size: 1rem; opacity: 0.85; max-width: 520px; line-height: 1.6; }
+  .section .tag {
+    display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem;
+    margin-top: 1rem; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); pointer-events: auto;
+  }
+  #sec-bg    { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+  #sec-mouse { background: linear-gradient(180deg, #0c0a1d 0%, #1a1040 100%); }
+  #sec-text  { background: #0a0a0a; }
+  .nav { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); z-index: 100;
+    display: flex; flex-direction: column; gap: 12px; }
+  .nav a { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,255,255,0.5); transition: all 0.3s; display: block; }
+  .nav a.active { background: #60a5fa; transform: scale(1.3); }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="#sec-bg"    title="效果一：背景粒子"></a>
+  <a href="#sec-mouse" title="效果二：鼠标交互"></a>
+  <a href="#sec-text"  title="效果三：文字粒子"></a>
+</div>
+
+<section id="sec-bg" class="section">
+  <div id="tsBg"></div>
+  <div class="content"><h2>效果一：背景粒子网络</h2><p>粒子随机漂浮，距离近时自动连线，鼠标悬停时粒子被排斥散开</p><span class="tag">鼠标移入 → 粒子散开 | 点击 → 扩散新粒子</span></div>
+</section>
+
+<section id="sec-mouse" class="section">
+  <div id="tsMouse"></div>
+  <div class="content"><h2>效果二：鼠标跟随粒子</h2><p>移动鼠标时粒子从光标处持续发射，点击产生爆炸效果</p><span class="tag">移动鼠标 → 发射粒子 | 点击 → 爆炸</span></div>
+</section>
+
+<section id="sec-text" class="section">
+  <div id="tsText"></div>
+  <div class="content"><h2>效果三：文字粒子化</h2><p>粒子自动排列成文字轮廓，持续波动呼吸</p><span class="tag">可修改 JS 中 text 配置换文字</span></div>
+</section>
+
+<script src="tsparticles.engine.min.js"></script>
+<script src="tsparticles.bundle.min.js"></script>
+
+<script>
+(async () => {
+  await loadFull(tsParticles);
+
+  // ═══ 效果一：背景粒子网络 ═══
+  await tsParticles.load({
+    id: 'tsBg',
+    options: {
+      fpsLimit: 60, detectRetina: true, fullScreen: { enable: false },
+      particles: {
+        number:  { value: 80, density: { enable: true } },
+        color:   { value: '#60a5fa' },
+        shape:   { type: 'circle' },
+        opacity: { value: 0.6, animation: { enable: true, speed: 1, min: 0.1 } },
+        size:    { value: { min: 1, max: 4 }, animation: { enable: true, speed: 2 } },
+        links:   { enable: true, distance: 150, color: '#60a5fa', opacity: 0.3, width: 1 },
+        move:    { enable: true, speed: 1.5, direction: 'none', random: true, outModes: 'bounce' }
+      },
+      interactivity: {
+        detectsOn: 'canvas',
+        events: { onHover: { enable: true, mode: 'repulse' }, onClick: { enable: true, mode: 'push' } },
+        modes:  { repulse: { distance: 120, duration: 0.4 }, push: { quantity: 4 } }
+      }
+    }
+  });
+
+  // ═══ 效果二：鼠标交互（轻量、封顶防卡顿）═══
+  await tsParticles.load({
+    id: 'tsMouse',
+    options: {
+      fpsLimit: 60, detectRetina: true, fullScreen: { enable: false }, background: { color: 'transparent' },
+      particles: {
+        number:          { value: 0, limit: 200 },
+        color:           { value: ['#f472b6', '#a78bfa', '#60a5fa', '#34d399'] },
+        shape:           { type: ['circle', 'star'] },
+        opacity:         { value: { min: 0.2, max: 0.5 } },
+        size:            { value: { min: 1, max: 3 } },
+        move:            { enable: true, speed: { min: 1, max: 3 }, direction: 'none', random: true, outModes: 'out' },
+        reduceDuplicates: true
+      },
+      interactivity: {
+        detectsOn: 'canvas',
+        events: { onHover: { enable: true, mode: 'trail' }, onClick: { enable: true, mode: 'push' } },
+        modes:  { trail: { lienAge: 30, particles: { number: { value: -4 } } }, push: { quantity: 30 } }
+      }
+    }
+  });
+
+  // ═══ 效果三：文字粒子 ═══
+  await tsParticles.load({
+    id: 'tsText',
+    options: {
+      fpsLimit: 60, detectRetina: true, fullScreen: { enable: false }, background: { color: 'transparent' },
+      particles: {
+        number:  { value: 3000 },
+        color:   { value: '#fbbf24' },
+        shape:   { type: 'circle' },
+        opacity: { value: { min: 0.2, max: 1 } },
+        size:    { value: { min: 1, max: 3 } },
+        move:    { enable: true, speed: 0.5, direction: 'none', random: true, outModes: 'bounce' },
+        shapeText: { text: { value: ['粒子特效', 'tsParticles'], font: 'Arial Black', style: '', className: '', height: 100 } }
+      },
+      interactivity: {
+        detectsOn: 'canvas',
+        events: { onHover: { enable: true, mode: 'repulse' }, onClick: { enable: true, mode: 'push' } },
+        modes:  { repulse: { distance: 100 }, push: { quantity: 10 } }
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>
